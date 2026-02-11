@@ -1,0 +1,20 @@
+import { DomainEvent } from 'src/shared/event-sourcing/domain-event';
+import { EventMetadata } from '../../../../shared/kernel/event-metadata';
+
+export type OrganizationCreatedPayload = {
+  name: string;
+  initialBalance: number;
+  currency: string;
+};
+
+export class OrganizationCreatedEvent extends DomainEvent<OrganizationCreatedPayload> {
+  constructor(
+    eventMetadata: EventMetadata,
+    payload: OrganizationCreatedPayload,
+  ) {
+    super(eventMetadata, payload);
+  }
+  getEventName(): string {
+    return 'OrganizationCreatedEvent';
+  }
+}

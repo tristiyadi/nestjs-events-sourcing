@@ -1,0 +1,101 @@
+### ============================================================
+### Testing Flow: Step-by-Step
+### ============================================================
+
+### ------------------------------------------------------------
+### STEP 1: Organization API
+### ------------------------------------------------------------
+
+### 1.1 Create New Organization
+### Save the returned organizationId for use in subsequent steps.
+POST http://localhost:3000/organization
+Content-Type: application/json
+
+{
+  "organizationName": "Echo Corp",
+  "initialBalance": 10000,
+  "currency": "USD"
+}
+
+### 1.2 Update Organization Balance
+### Replace :organizationId with actual UUID from creation response.
+PUT http://localhost:3000/organization/0fb06630-ec01-4257-ba71-0663271b1a0d
+Content-Type: application/json
+
+{
+  "balance": 15000,
+  "transactionKey": "tx-update-balance-456"
+}
+
+
+### ------------------------------------------------------------
+### STEP 2: Card API
+### ------------------------------------------------------------
+
+### 2.1 Create New Card
+### Replace 'organizationId' with the one from Step 1.1.
+POST http://localhost:3000/card
+Content-Type: application/json
+
+{
+  "organizationId": "0fb06630-ec01-4257-ba71-0663271b1a0d",
+  "cardNumber": "1234-5678-9012-3456",
+  "dailyLimit": 1000,
+  "monthlyLimit": 5000
+}
+
+
+### ------------------------------------------------------------
+### STEP 3: Transaction API
+### ------------------------------------------------------------
+
+### 3.1 Create Transaction (Valid Checksum & Correlation ID)
+### To generate a new checksum for different values, run:
+###   npx ts-node calculate-checksum.ts
+POST http://localhost:3000/transaction
+Content-Type: application/json
+x-organization-id: 0fb06630-ec01-4257-ba71-0663271b1a0d
+x-checksum: c05d68deb6b71a4a21fd92b93c2c9ebb371ba590912308546b1a9f30ce83d543
+x-correlation-id: my-correlation-id-789
+
+{
+  "organizationId": "0fb06630-ec01-4257-ba71-0663271b1a0d",
+  "cardId": "f9155395-fcd4-4921-97a5-47661974af2d",
+  "amount": 200.5,
+  "transactionKey": "transaction-key-789"
+}
+
+### 3.2 Get Transaction Status
+### Replace the UUID with the one returned from the creation request (3.1).
+GET http://localhost:3000/transaction/61ca81ec-b287-437e-9cbd-fda45a92d283
+Content-Type: application/json
+
+
+### ------------------------------------------------------------
+### Edge Cases / Negative Tests
+### ------------------------------------------------------------
+
+### T1: Create Transaction (Missing Checksum - Should Fail)
+POST http://localhost:3000/transaction
+Content-Type: application/json
+
+{
+  "organizationId": "0fb06630-ec01-4257-ba71-0663271b1a0d",
+  "cardId": "f9155395-fcd4-4921-97a5-47661974af2d",
+  "amount": 100.5,
+  "transactionKey": "transaction-key-789"
+}
+
+### T2: Create Transaction (Invalid Checksum - Should Fail)
+POST http://localhost:3000/transaction
+Content-Type: application/json
+x-organization-id: 0fb06630-ec01-4257-ba71-0663271b1a0d
+x-checksum: invalid-checksum-value
+x-correlation-id: test-id-001
+
+{
+  "organizationId": "0fb06630-ec01-4257-ba71-0663271b1a0d",
+  "cardId": "f9155395-fcd4-4921-97a5-47661974af2d",
+  "amount": 100.5,
+  "transactionKey": "transaction-key-789"
+}
